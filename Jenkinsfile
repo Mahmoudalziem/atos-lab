@@ -48,7 +48,7 @@ pipeline{
                 catchError(message : "Message") {
                      script{
                         docker.withRegistry('34.123.134.84:32000', 'nexus-credentials') {
-                            app.push("${env.BUILD_NUMBER}")
+                            app.push("java-lab")
                             app.push("latest")
                         }
                 }
