@@ -7,6 +7,11 @@ pipeline{
         SCANNER_HOME=tool 'sonarQube'
         ORGANIZATION="microservices"
         PROJECT_NAME="atos"
+        NEXUS_VERSION = "nexus3"
+        NEXUS_PROTOCOL = "http"
+        NEXUS_URL = "34.123.134.84:32000"
+        NEXUS_REPOSITORY = "atos-lab"
+        NEXUS_CREDENTIAL_ID = "admin"
     }
      options {
         buildDiscarder logRotator( 
@@ -25,6 +30,8 @@ pipeline{
                 }               
             }
         }
+        
+
         stage('Build Artifact'){
             steps{
                     sh ''' 
@@ -35,37 +42,20 @@ pipeline{
             }
         }
 
-        stage('Docker Login'){
-            steps{
-             catchError(message : "Message"){
-                 withCredentials([usernamePassword(credentialsId: 'DOCKER_AUTH', passwordVariable: 'pass', usernameVariable: 'user')]) {
-                    sh '''
-    		        docker login -u ${user} -p ${pass}
-                    echo done
-                    '''
-                } 
-             }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
-            }
-        }
+       
         stage('Push Image'){
             steps{
                 catchError(message : "Message") {
-                    sh '''
-                        docker push azima/jenkins:${BUILD_NUMBER}
-                        echo done
-                    '''
+                     script{
+                        docker.withRegistry('34.123.134.84:32000', 'nexus-credentials') {
+                            app.push("${env.BUILD_NUMBER}")
+                            app.push("latest")
+                        }
+                }
                 }
             }
         }
-        stage("docker remove"){
-            steps{
-                catchError(message : "Message"){
-                    sh '''
-                        docker rm -f ecommerce
-                    '''
-                }
-            }
-        }
+
         stage("Run Docker image"){
             steps{
                 catchError(message : "Message"){
